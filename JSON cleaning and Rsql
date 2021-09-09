@@ -1,0 +1,73 @@
+install.packages('jsonlite', repos = "http://cran.us.r-project.org")
+library(jsonlite)
+install.packages('sqldf',repos = "http://cran.us.r-project.org")
+library(sqldf)
+install.packages('plyr',repos = "http://cran.us.r-project.org")
+library(plyr)
+#step 1: load the data
+data1 <- fromJSON("http://opendata.maryland.gov/api/views/pdvhtf2u/rows.json?accessType=DOWNLOAD")
+nometadata <- data.frame(data1[['data']])
+cleandata <- nometadata[,-(1:8)]
+#step 2: clean the data
+namesOfColumns <-
+c("CASE_NUMBER","BARRACK","ACC_DATE","ACC_TIME","ACC_TIME_CODE","DAY_OF_WEEK"
+,"ROAD","INTERSECT_ROAD","DIST_FROM_INTERSECT","DIST_DIRECTION","CITY_NA
+ME","COUNTY_CODE","COUNTY_NAME","VEHICLE_COUNT","PROP_DEST","INJURY","COLLI
+SION_WITH_1","COLLISION_WITH_2")
+View(namesOfColumns)
+names(cleandata) <- namesOfColumns
+View(cleandata)
+cleandata$DAY_OF_WEEK <- gsub('\\s+','',cleandata$DAY_OF_WEEK)
+cleandata$DAY_OF_WEEK <- as.factor(cleandata$DAY_OF_WEEK)
+#step 3: understand the data! SQL
+sqldf("select count(*) from cleandata where DAY_OF_WEEK == 'SUNDAY'")
+## count(*)
+## 1 2373
+sqldf("select count (*) from cleandata where INJURY == 'YES' AND INJURY IS 
+NOT NULL")
+## count (*)
+## 1 6433
+sqldf("select DAY_OF_WEEK, count(*) from cleandata where INJURY == 'YES' 
+group by DAY_OF_WEEK")
+## DAY_OF_WEEK count(*)
+## 1 FRIDAY 1043
+## 2 MONDAY 915
+## 3 SATURDAY 950
+## 4 SUNDAY 818
+## 5 THURSDAY 968
+## 6 TUESDAY 843
+## 7 WEDNESDAY 896
+#step 4: understanding tapply
+sundaystats <- function()
+{
+results <- tapply(cleandata$DAY_OF_WEEK, cleandata$DAY_OF_WEEK == 'SUNDAY', 
+length)
+print("Accidents on Sundays")
+return(results["TRUE"])
+}
+sundaystats()
+## [1] "Accidents on Sundays"
+## TRUE 
+## 2373
+injuriesnoNA <- na.omit(cleandata$INJURY)
+injurystats <- function()
+ {
+results2 <- tapply(injuriesnoNA, injuriesnoNA == "YES", length)
+print("Accidents with Injuries")
+return(results2["TRUE"])
+}
+injurystats()
+## [1] "Accidents with Injuries"
+## TRUE 
+## 6433
+## 
+results3 <- tapply(cleandata$DAY_OF_WEEK, cleandata$INJURY == 'YES', count)
+results3$'TRUE'
+## x freq
+## 1 FRIDAY 1043
+## 2 MONDAY 915
+## 3 SATURDAY 950
+## 4 SUNDAY 818
+## 5 THURSDAY 968
+## 6 TUESDAY 843
+## 7 WEDNESDAY 896
