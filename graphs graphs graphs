@@ -1,0 +1,34 @@
+install.packages('ggplot2', repos = "http://cran.us.r-project.org")
+## Installing package into 'C:/Users/Case&Fo/Documents/R/win-library/4.1'
+## (as 'lib' is unspecified)
+## package 'ggplot2' successfully unpacked and MD5 sums checked
+## 
+## The downloaded binary packages are in
+## C:\Users\Case&Fo\AppData\Local\Temp\Rtmp86ddPX\downloaded_packages
+library(ggplot2)
+air <-airquality
+cleanair <- na.omit(air)
+#ozone
+ozoneplot <- ggplot(cleanair,aes(x=Ozone)) + geom_histogram(binwidth=10)
+ozoneplot
+#Solar.R
+solarplot <- ggplot(cleanair,aes(x=Solar.R)) + geom_histogram(binwidth=10)
+solarplot
+#Wind
+windplot <- ggplot(cleanair,aes(x=Wind)) + geom_histogram(binwidth=1)
+windplot
+#Temp
+tempplot <- ggplot(cleanair,aes(x=Temp)) + geom_histogram(binwidth=1)
+tempplot
+#Month
+monthplot <- ggplot(cleanair,aes(x=Month))+ geom_histogram(center = 0, 
+binwidth=0.5) + scale_x_continuous(breaks=seq(5, 9, 1))
+monthplot
+#Day
+dayplot <- ggplot(cleanair,aes(x=Day)) + geom_histogram(binwidth=0.5, 
+na.rm=TRUE) + scale_x_continuous(breaks=seq(0, 31, 1))
+dayplot
+#ozone boxplot
+ozonebox <- ggplot(cleanair, aes(x=factor(Month), y=Ozone, 
+fill=factor(Month))) + geom_boxplot()
+ozonebox
