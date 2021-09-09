@@ -1,0 +1,32 @@
+#change mtcars into new variable
+myCars <- mtcars
+#find max hp
+#create new variable for max hp formula
+maxHp<- which.max(myCars$hp)
+#display max hp car
+myCars[maxHp, ]
+## mpg cyl disp hp drat wt qsec vs am gear carb
+## Maserati Bora 15 8 301 335 3.54 3.57 14.6 0 1 5 8
+#find max mpg
+#create new variable for max mpg formula
+maxMPG <- which.max(myCars$mpg)
+#display max mpg car
+myCars[maxMPG, ]
+## mpg cyl disp hp drat wt qsec vs am gear carb
+## Toyota Corolla 33.9 4 71.1 65 4.22 1.835 19.9 1 1 4 1
+#create variable for combining best mpg and hp
+HpandMpg <- myCars$mpg/myCars$hp 
+#display best mpg/hp car
+myCars[which.max(HpandMpg),]
+## mpg cyl disp hp drat wt qsec vs am gear carb
+## Honda Civic 30.4 4 75.7 52 4.93 1.615 18.52 1 1 4 2
+#normalize mpg and hp data to determine best weighted combo
+#create variables for normalized data
+normalHp <- (myCars$hp-min(myCars$hp))/(max(myCars$hp)-min(myCars$hp))
+normalMpg <- (myCars$mpg-min(myCars$mpg))/(max(myCars$mpg)-min(myCars$mpg))
+#create variable for weighted combo
+myHpMpgW <- which.max(normalHp+normalMpg)
+#display best weighted combo
+myCars[myHpMpgW,]
+## mpg cyl disp hp drat wt qsec vs am gear carb
+## Maserati Bora 15 8 301 335 3.54 3.57 14.6 0 1 5 8
