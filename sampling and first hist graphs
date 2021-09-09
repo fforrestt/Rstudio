@@ -1,0 +1,112 @@
+#install moments
+install.packages("moments", dependencies=TRUE, 
+repos='http://cran.rstudio.com/')
+#Step 1: Write a summarizing function to understand the distribution of a 
+vector
+printVecInfo <- function(vec)
+{
+ m <- cat("mean", mean(vec), "\n") 
+ me <- cat("median", median(vec), "\n") 
+ mi <- cat("min",min(vec), "\n") 
+ ma <- cat("max", max(vec), "\n") 
+ sd <- cat("standard deviation", sd(vec), "\n") 
+ q <- cat("quantile", quantile(vec, probs =c(0.05, 0.95)), "\n") 
+ sk <- cat("skewness", skewness(vec), "\n")
+ newlist <- c(m, me, mi, ma, sd, q, sk)
+ return(newlist)
+}
+test <- c(1,2,3,4,5,6,7,8,9,10,50)
+printVecInfo(test)
+## mean 9.545455 
+## median 6 
+## min 1 
+## max 50 
+## standard deviation 13.72125 
+## quantile 1.5 30 
+## skewness 2.620396
+#Step 2: Creating Samples in a Jar
+jar <- c() 
+jar[1:50] <- "red"
+jar[51:100] <- "blue"
+marbles <- table(jar) 
+marbles[names(marbles)== "red"] 
+## red 
+## 50
+percentageRED <- function(x)
+{
+sample(jar,size=x, replace=TRUE)
+redsum <-sum(sample(jar,size=x, replace=TRUE)=="red")
+percentage <- (redsum/x)*100
+print("% of marbles that are red:")
+return(percentage)
+}
+percentageRED(10)
+## [1] "% of marbles that are red:"
+## [1] 80
+sample20 <-replicate(20,table(sample(jar, 10,replace=TRUE)),simplify=TRUE) 
+printVecInfo(sample20[1,]) 
+## mean 4.8 
+## median 5 
+## min 1 
+## max 9 
+## standard deviation 1.704483 
+## quantile 2.9 7.1 
+## skewness 0.18843
+printVecInfo(sample20[2,]) 
+## mean 5.2 
+## median 5 
+## min 1 
+## max 9 
+## standard deviation 1.704483 
+## quantile 2.9 7.1 
+## skewness -0.18843
+hist(sample20) 
+supersample <-replicate(100,table(sample(jar, 
+10,replace=TRUE)),simplify=TRUE) 
+printVecInfo(supersample[1,]) 
+## mean 5.2 
+## median 5 
+## min 2 
+## max 8 
+## standard deviation 1.428427 
+## quantile 3 8 
+## skewness 0.146292
+printVecInfo(supersample[2,]) 
+## mean 4.8 
+## median 5 
+## min 2 
+## max 8 
+## standard deviation 1.428427 
+## quantile 2 7 
+## skewness -0.1462926
+hist(supersample) 
+airquality1 <- airquality
+noNAs <- na.omit(airquality1)
+ozone <- printVecInfo(noNAs[,1])
+## mean 42.0991 
+## median 31 
+## min 1 
+## max 168 
+## standard deviation 33.27597 
+## quantile 8.5 109 
+## skewness 1.248104
+hist(noNAs[,1])
+#Step 3:Explore the ariquality dataset
+wind <- printVecInfo(noNAs[,3])
+## mean 9.93964 
+## median 9.7 
+## min 2.3 
+## max 20.7 
+## standard deviation 3.557713 
+## quantile 4.6 15.5 
+## skewness 0.4556414
+hist(noNAs[,3])
+temp <- printVecInfo(noNAs[,4])
+## mean 77.79279 
+## median 79 
+## min 57 
+## max 97 
+## standard deviation 9.529969 
+## quantile 61 92.5 
+## skewness -0.2250959
+hist(noNAs[,4])
