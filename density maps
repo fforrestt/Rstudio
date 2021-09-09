@@ -1,0 +1,147 @@
+library(gdata)
+## gdata: read.xls support for 'XLS' (Excel 97-2004) files ENABLED.
+## 
+## gdata: read.xls support for 'XLSX' (Excel 2007+) files ENABLED.
+## 
+## Attaching package: 'gdata'
+## The following object is masked from 'package:stats':
+## 
+## nobs
+## The following object is masked from 'package:utils':
+## 
+## object.size
+## The following object is masked from 'package:base':
+## 
+## startsWith
+library(zipcode)
+library(ggplot2)
+library(ggmap)
+## Google's Terms of Service: https://cloud.google.com/maps-platform/terms/.
+## Please cite ggmap if you use it! See citation("ggmap") for details.
+library(openintro)
+## Loading required package: airports
+## Loading required package: cherryblossom
+## Loading required package: usdata
+library(stringr)
+#read data set
+perl <- "C:/perl/bin/perl.exe"
+XL <- read.xls(xls='C:/Users/Case&Fo/Desktop/MedianZIP_2_2.xlsx', 
+sheet=1,header=TRUE)
+colnames(XL) <- c("zip","median", "mean", "population")
+data(zipcode)
+#merge and clean the dataset
+merged1 <- merge(x=XL, y=zipcode, by.x="zip")
+merged1 <- merged1[merged1$state!="AK",]
+merged1 <- merged1[merged1$state != "HI",]
+merged1$statename <- abbr2state(merged1$state)
+merged1$statename <- tolower(merged1$statename)
+merged1$median <- gsub(",","",merged1$median)
+merged1$median <- as.numeric(merged1$median)
+head(merged1) 
+## zip median mean population city state latitude longitude 
+timezone
+## 1 01001 56663 66688 16445 Agawam MA 42.07061 -72.62029 
+-5
+## 2 01002 49853 75063 28069 Amherst MA 42.37765 -72.50323 
+-5
+## 3 01003 28462 35121 8491 Amherst MA 42.36956 -72.63599 
+-5
+## 4 01005 75423 82442 4798 Barre MA 42.41209 -72.10443 
+-5
+## 5 01007 79076 85802 12962 Belchertown MA 42.27842 -72.41100 
+-5
+## 6 01008 63980 78391 1244 Blandford MA 42.17431 -72.94828 
+-5
+## dst statename
+## 1 TRUE massachusetts
+## 2 TRUE massachusetts
+## 3 TRUE massachusetts
+## 4 TRUE massachusetts
+## 5 TRUE massachusetts
+## 6 TRUE massachusetts
+meanstate <- tapply(merged1$median,merged1$state,mean)
+popsum <- tapply(as.numeric(gsub(",", "",merged1$population)), merged1$state, 
+sum)
+SUMPOP <- data.frame(meanstate,popsum)
+SUMPOP$stateabb <- row.names(SUMPOP)
+str(SUMPOP)
+## 'data.frame': 49 obs. of 3 variables:
+## $ meanstate: num 40548 36961 47557 62447 56033 ...
+## $ popsum : num 4761001 2936699 5693201 36566432 4886759 ...
+## $ stateabb : chr "AL" "AR" "AZ" "CA" ...
+SUMPOP$states <- abbr2state(SUMPOP$stateabb)
+SUMPOP$states <- tolower(SUMPOP$states)
+SUMPOP <- SUMPOP[SUMPOP$stateabb != "DC",]
+SUMPOP$states <- as.character(SUMPOP$states)
+us <- map_data("state")
+#median income map
+meanColor <- ggplot(SUMPOP,aes(map_id=states))
+meanColor <- meanColor + geom_map(map=us,aes(fill=meanstate))
+meanColor <- meanColor + expand_limits(x=us$long,y=us$lat)
+meanColor <- meanColor + coord_map() + ggtitle("state average median income")
+meanColor
+#population map
+popColor <- ggplot(SUMPOP,aes(map_id=states))
+popColor <- popColor + geom_map(map=us,aes(fill=popsum))
+popColor <- popColor + expand_limits(x=us$long,y=us$lat)
+popColor <- popColor + coord_map() + ggtitle("state population")
+popColor
+#income per zip code map
+dummyDF <- data.frame(merged1$statename,stringsAsFactors=FALSE)
+us <- map_data("state")
+incomeZip <- ggplot(dummyDF,aes(map_id=merged1$statename))
+incomeZip <- incomeZip + geom_map(map=us,fill="black",color="white")
+incomeZip <- incomeZip + expand_limits(x=us$long,y=us$lat)
+incomeZip <- incomeZip + coord_map() + ggtitle("Income per zip code")
+incomeZipmap <- incomeZip +
+geom_point(data=merged1,aes(x=merged1$longitude,y=merged1$latitude,color=medi
+an),shape=1)
+incomeZipmap
+## Warning: Use of `merged1$longitude` is discouraged. Use `longitude` 
+instead.
+## Warning: Use of `merged1$latitude` is discouraged. Use `latitude` instead.
+## Warning: Use of `merged1$statename` is discouraged. Use `statename` 
+instead.
+#zip code density map
+us <- map_data("state")
+zipmedian <- ggplot(merged1)
+zipmedian <- zipmedian + geom_map(map=us, aes(map_id=statename))
+zipmedian <- zipmedian + expand_limits(x=us$long,y=us$lat)
+zipmedian <- zipmedian + stat_density2d(aes(x=merged1$longitude, 
+y=merged1$latitude, fill = ..level.., alpha = ..level..), 
+ data=dummyDF, geom = 'polygon') + scale_fill_gradient(low =
+'black', high = 'yellow')
+zipmedian <- zipmedian + ggtitle("Zipcode Density")
+zipmedian
+#NY map 1
+nymap <- ggplot(merged1,aes(map_id = statename))
+nymap <- nymap + geom_map(map=us, color = "white")
+nymap <- nymap + expand_limits(x=merged1$longitude, y=merged1$latitude) +
+coord_map()
+nymap <- nymap + xlim(-80,-70) + ylim(39, 46) + coord_map()
+## Coordinate system already present. Adding new coordinate system, which 
+will replace the existing one.
+nymap <- nymap + geom_point(aes(x=merged1$longitude, y=merged1$latitude, 
+color= median)) + theme_light()
+nymap <- nymap + ggtitle('NY Median Income') 
+nymap <- nymap + xlab('Longitude') + ylab('Latitude')
+nymap <- nymap + scale_fill_gradientn(colours = rainbow(4), name ='NY Median 
+Income')
+nymap
+## Warning: Use of `merged1$longitude` is discouraged. Use `longitude` 
+instead.
+## Warning: Use of `merged1$latitude` is discouraged. Use `latitude` instead.
+## Warning: Removed 26257 rows containing missing values (geom_point).
+#NY map 2
+nymap2 <- ggplot(merged1) 
+nymap2 <- nymap2 + geom_map(map=us, aes(map_id=statename))
+nymap2 <- nymap2 + expand_limits(x=us$long, y=us$lat) 
+nymap2 <- nymap2 + xlim(-80,-70) + ylim(39,46) + coord_map()
+nymap2 <- nymap2 + stat_density2d(aes(x=merged1$longitude, 
+y=merged1$latitude,fill =..level..,alpha= ..level.. ), 
+ data=dummyDF, geom = "polygon") + scale_fill_gradient(low =
+'black', high = 'yellow')
+nymap2 <- nymap2 + theme_classic() + ggtitle('Density of NY Zipcodes')
+nymap2 <- nymap2 + xlab('Longitude') + ylab('Latitude')
+nymap2
+## Warning: Removed 26257 rows containing non-finite values (stat_density2d)
